@@ -1,11 +1,22 @@
 package io.indoorlocation.basicbeaconlocationprovider;
 
+//import android.bluetooth.le.ScanResult;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.location.Location;
 import android.os.RemoteException;
 import android.util.Log;
+
+import com.nexenio.bleindoorpositioning.ble.advertising.AdvertisingPacket;
+import com.nexenio.bleindoorpositioning.ble.beacon.Beacon;
+import com.nexenio.bleindoorpositioning.ble.beacon.BeaconManager;
+import com.nexenio.bleindoorpositioning.ble.beacon.IBeacon;
+import com.nexenio.bleindoorpositioning.location.Location;
+import com.nexenio.bleindoorpositioning.location.provider.IBeaconLocationProvider;
+import com.polidea.rxandroidble.RxBleClient;
+import com.polidea.rxandroidble.scan.ScanResult;
+import com.polidea.rxandroidble.scan.ScanSettings;
 
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconConsumer;
@@ -71,6 +82,13 @@ public class BasicBeaconIndoorLocationProvider extends IndoorLocationProvider im
         this.knownUuids = new HashSet<>();
         this.beaconManager = BeaconManager.getInstanceForApplication(context);
         this.beaconManager.getBeaconParsers().add(0, new BeaconParser().setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24,d:25-25"));
+    }
+
+    private void processScanResult(ScanResult scanResult) {
+        String macAddress = scanResult.getBleDevice().getMacAddress();
+        byte[] advertisingData = scanResult.getScanRecord().getBytes();
+        int rssi = scanResult.getRssi();
+        BeaconManager.processAdvertisingData(macAddress, advertisingData, rssi);
     }
 
     public void fetchBeaconData(IndoorLocation indoorLocation) {
